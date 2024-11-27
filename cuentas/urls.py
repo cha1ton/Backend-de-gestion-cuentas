@@ -11,6 +11,7 @@ from .views import (
     NotificacionViewSet,
     UsuarioActualView,
     CustomTokenObtainPairView,
+    RegistroUsuarioView
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -28,4 +29,5 @@ urlpatterns = router.urls + [
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('dashboard-metrics/', DashboardMetricsView.as_view(), name='dashboard-metrics'),
+    path('registro/', RegistroUsuarioView.as_view(), name='registro_usuario'),
 ]

@@ -10,7 +10,12 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.permissions import BasePermission
 from .models import Usuario, Cliente, Proveedor, Factura, Notificacion
 from .serializers import UsuarioSerializer, ClienteSerializer, ProveedorSerializer, FacturaSerializer, NotificacionSerializer
+from rest_framework import status
+from .serializers import RegistroUsuarioSerializer
+from rest_framework.exceptions import PermissionDenied
+import logging
 
+logger = logging.getLogger(__name__)
 
 # Permiso personalizado para acceso por roles
 class IsAdminOrReadOnly(BasePermission):
@@ -97,6 +102,7 @@ class DashboardMetricsView(APIView):
         import calendar
         return calendar.month_name[month_number]
 
+
 # Personalización del login para incluir el rol del usuario en el token
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -109,3 +115,25 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+# Permiso personalizado para administrador
+class IsAdmin(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            logger.warning("Intento de acceso no autenticado al endpoint de registro.")
+            raise PermissionDenied(detail="Usuario no autenticado.")
+        if request.user.rol != 'Administrador':
+            logger.warning(f"Acceso denegado para el usuario {request.user.username}. Rol: {request.user.rol}")
+            raise PermissionDenied(detail="Acceso denegado. Solo los administradores pueden registrar usuarios.")
+        return True
+
+# Vista para registrar usuarios
+class RegistroUsuarioView(APIView):
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        serializer = RegistroUsuarioSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Usuario creado con éxito'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

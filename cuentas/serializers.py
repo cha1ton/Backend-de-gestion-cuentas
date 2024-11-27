@@ -37,6 +37,24 @@ class FacturaSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("No debe asignar un cliente si el tipo es 'Por Pagar'")
 
         return data
+    
+class RegistroUsuarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ['username', 'email', 'password', 'rol']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        # Crear un usuario con rol
+        usuario = Usuario.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            rol=validated_data['rol']
+        )
+        return usuario
 
 class NotificacionSerializer(serializers.ModelSerializer):
     factura_numero = serializers.CharField(source='factura.numero_factura', read_only=True)
