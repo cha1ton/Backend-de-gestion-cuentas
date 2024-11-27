@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'cuentas.middlewares.ActualizarFacturasMiddleware',  # Middleware para actualizar facturas vencidas
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -136,9 +137,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-pe'  # Cambiar el idioma a español de Perú
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Lima'  # Zona horaria de Lima, Perú
+
 
 USE_I18N = True
 

@@ -1,9 +1,7 @@
-# cuentas/models.py
-
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 from django.core.exceptions import ValidationError
-
+from datetime import date
 
 class Usuario(AbstractUser):
     ROLES = [
@@ -72,34 +70,35 @@ class Factura(models.Model):
 
     def save(self, *args, **kwargs):
         # Validación para facturas "Por Cobrar"
-        if self.tipo == 'Por Cobrar' and not self.cliente:
+        if self.tipo == 'Cobrar' and not self.cliente:
             raise ValidationError("Debe asignar un cliente si el tipo es 'Por Cobrar'")
-        if self.tipo == 'Por Cobrar' and self.proveedor:
+        if self.tipo == 'Cobrar' and self.proveedor:
             raise ValidationError("No debe asignar un proveedor si el tipo es 'Por Cobrar'")
 
         # Validación para facturas "Por Pagar"
-        if self.tipo == 'Por Pagar' and not self.proveedor:
+        if self.tipo == 'Pagar' and not self.proveedor:
             raise ValidationError("Debe asignar un proveedor si el tipo es 'Por Pagar'")
-        if self.tipo == 'Por Pagar' and self.cliente:
+        if self.tipo == 'Pagar' and self.cliente:
             raise ValidationError("No debe asignar un cliente si el tipo es 'Por Pagar'")
+
+        # Actualizar el estado automáticamente
+        if self.estado == 'Pendiente' and self.fecha_vencimiento < date.today():
+            self.estado = 'Vencida'
 
         # Llamar al método save original
         super().save(*args, **kwargs)
 
-
     @staticmethod
     def actualizar_facturas_vencidas():
+        # Actualizar facturas vencidas de forma masiva
         from django.utils.timezone import now
         Factura.objects.filter(
             estado='Pendiente', fecha_vencimiento__lt=now().date()
         ).update(estado='Vencida')
 
-
     def __str__(self):
         return f"{self.numero_factura} - {self.tipo}"
     
-    
-
 # Modelo de Notificaciones
 class Notificacion(models.Model):
     factura = models.ForeignKey(Factura, on_delete=models.CASCADE)
